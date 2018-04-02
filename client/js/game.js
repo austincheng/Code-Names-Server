@@ -185,3 +185,8 @@ socket.on('badMenuResponse', function() {
 socket.on('badSpyMasterMenuResponse', function() {
 	alert('There are already 2 spymasters.');
 });
+
+var h = document.getElementById("H");
+h.onclick = function() {
+	alert("NO");
+};

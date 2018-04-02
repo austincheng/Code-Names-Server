@@ -62,7 +62,7 @@ var Board = function(words, answer, starter, gameId) {
 	return self;
 };
 
-var allWords// = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+var allWords;// = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
 var readTextFile = function(file) {
     fs.readFile(file, 'utf8', function(err, data) {
     	if (err) {
