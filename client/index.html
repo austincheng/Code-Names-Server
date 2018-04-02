@@ -46,7 +46,7 @@
 	        } else if (piece === Piece.ASSASSIN){
 	            return 'rgb(71, 69, 64)';
 	        } else {
-	            return '#ffffff';
+	            return 'white';
 	        }
 		}
 
@@ -56,6 +56,16 @@
 			self.answer = answer;
 			self.starter = starter;
 			self.turn = starter;
+			var covered = new Array(SIDE);
+			for (var i = 0; i < covered.length; i++) {
+				covered[i] = new Array(SIDE);
+			}
+			for (var r = 0; r < SIDE; r++) {
+				for (var c = 0; c < SIDE; c++) {
+					covered[r][c] = Piece.NONE;
+				}
+			}
+			self.covered = covered;
 			return self;
 		};
 
@@ -215,11 +225,13 @@
 			return ctx.measureText('M').width;
 		}
 		var socket = io();
-		//setInterval(function() {
+		setInterval(function() {
 			ctx.clearRect(0, 0, WIDTH, HEIGHT);
 			for (var r = 0; r < SIDE; r++) {
 				for (var c = 0; c < SIDE; c++) {
-					ctx.fillStyle = color(board.answer[r][c]);
+					ctx.fillStyle = 'black';
+					ctx.strokeRect(IN_BETWEEN + (CARD_WIDTH + IN_BETWEEN) * c, IN_BETWEEN + (CARD_HEIGHT + IN_BETWEEN) * r, CARD_WIDTH, CARD_HEIGHT);
+					ctx.fillStyle = color(board.covered[r][c]);
 					ctx.fillRect(IN_BETWEEN + (CARD_WIDTH + IN_BETWEEN) * c, IN_BETWEEN + (CARD_HEIGHT + IN_BETWEEN) * r, CARD_WIDTH, CARD_HEIGHT);
 					ctx.fillStyle = 'black';
 					var word = board.words[r][c];
@@ -239,6 +251,22 @@
 					}
 				}
 			}
-		//}, 1000/25);
+		}, 1000/25);
+
+		document.getElementById('ctx').addEventListener('click', function(event) {
+			var x = event.clientX - 8;
+			var y = event.clientY - 8;
+	        var row = Math.floor(y / (IN_BETWEEN + CARD_HEIGHT));
+	        var col = Math.floor(x / (IN_BETWEEN + CARD_WIDTH));
+
+	        if ((IN_BETWEEN + CARD_HEIGHT) * row + IN_BETWEEN <= y) {
+	            if ((IN_BETWEEN + CARD_WIDTH) * col + IN_BETWEEN <= x) {
+	                if (board.covered[row][col] === Piece.NONE) {
+	                    var cover = board.answer[row][col];
+	                    board.covered[row][col] = cover;
+	                }
+	            }
+	        }
+		}, false);
 	</script>
 </html>
