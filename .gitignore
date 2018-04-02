@@ -1,0 +1,3 @@
+node_modules
+*.txt
+!client/wordSets/lineSeparated/standardWords.txt

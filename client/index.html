@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Code Names</title>
+	</head>
+	<div id="gameDiv">
+		<canvas id="ctx" width="1300" height="825" style="position:absolute;left:8px;top:8px;border:1px solid #000000;"></canvas>
+	</div>
+	<script src="/client/socket.js"></script>
+	<script>
+		var CARD_WIDTH = 200;
+		var CARD_HEIGHT = 100;
+		var IN_BETWEEN = 50;
+		var FONT_SIZE = 20;
+		var BUTTON_WIDTH = 50;
+		var BUTTON_HEIGHT = 25;
+		var TIMING_PADDING = 50;
+		var SIDE = 5;
+		var WIDTH = CARD_WIDTH * SIDE + IN_BETWEEN * (SIDE + 1);
+		var HEIGHT = CARD_HEIGHT * SIDE + IN_BETWEEN * (SIDE + 1) + BUTTON_HEIGHT;
+
+		var Piece = {
+			RED: "red",
+			BLUE: "blue",
+			NEUTRAL: "neutral",
+			ASSASSIN: "assassin",
+			NONE: "none",
+		};
+
+		var opposite = function(piece) {
+			if (piece === Piece.RED) {
+				return Piece.BLUE;
+			} else if (piece === Piece.BLUE) {
+				return Piece.RED;
+			}
+		}
+
+		var color = function(piece) {
+	        if (piece === Piece.RED) {
+	            return 'rgb(232, 60, 64)';
+	        } else if (piece === Piece.BLUE) {
+	            return 'rgb(35, 142, 177)';
+	        } else if (piece === Piece.NEUTRAL) {
+	            return 'rgb(216, 204, 152)';
+	        } else if (piece === Piece.ASSASSIN){
+	            return 'rgb(71, 69, 64)';
+	        } else {
+	            return '#ffffff';
+	        }
+		}
+
+		var Board = function(words, answer, starter) {
+			var self = {};
+			self.words = words;
+			self.answer = answer;
+			self.starter = starter;
+			self.turn = starter;
+			return self;
+		};
+
+
+		var readTextFile = function(file) {
+		    var rawFile = new XMLHttpRequest();
+		    var allText = "";
+		    rawFile.open("GET", file, false);
+		    rawFile.onreadystatechange = function () {
+		        if(rawFile.readyState === 4) {
+		            if(rawFile.status === 200 || rawFile.status == 0) {
+		            	allText = rawFile.responseText;
+		            }
+		        }
+		    }
+		    rawFile.send(null);
+		    return allText;
+		}
+		var allText = readTextFile('/client/wordSets/lineSeparated/standardWords.txt');
+		var allWords = allText.split("\r\n");
+
+		var getRandomInt = function(max) {
+			return Math.floor(Math.random() * max);
+		} 
+
+		var getWords = function() {
+			var words = new Array(SIDE);
+			for (var i = 0; i < words.length; i++) {
+				words[i] = new Array(SIDE);
+			}
+        	var used = [];
+	        for (var r = 0; r < SIDE; r++) {
+	            for (var c = 0; c < SIDE; c++) {
+	                var index = getRandomInt(allWords.length);
+	                while (used.includes(index)) {
+	                    index = getRandomInt(allWords.length);
+	                }
+	                words[r][c] = allWords[index];
+	                used.push(index);
+	            }
+	        }
+	        return words;
+		}
+
+		var getAnswer = function() {
+			var answer = new Array(SIDE);
+			for (var i = 0; i < answer.length; i++) {
+				answer[i] = new Array(SIDE);
+			}
+			var assassinRow = getRandomInt(SIDE);
+			var assassinCol = getRandomInt(SIDE);
+			answer[assassinRow][assassinCol] = Piece.ASSASSIN;
+
+			for (var i = 0; i < 23 /*Only works for SIDE = 5 */; i++) {
+				var row = getRandomInt(SIDE);
+				var col = getRandomInt(SIDE);
+				while (answer[row][col] !== undefined) {
+					row = getRandomInt(SIDE);
+                	col = getRandomInt(SIDE);
+				}
+				if (i % 3 === 0) {
+					answer[row][col] = Piece.RED;
+				} else if (i % 3 === 1) {
+					answer[row][col] = Piece.BLUE;
+				} else {
+					answer[row][col] = Piece.NEUTRAL;
+				}
+			}
+
+			var lastRow = 0;
+			var lastCol = 0;
+			var found = false;
+			for (var r = 0; r < SIDE; r++) {
+				for (var c = 0; c < SIDE; c++) {
+					if (answer[r][c] === undefined) {
+						lastRow = r;
+						lastCol = c;
+						found = true;
+						break;
+					}
+				}
+				if (found) {
+					break;
+				}
+			}
+
+			var coin = Math.random();
+			var first = null;
+			if (coin < 0.5) {
+				answer[lastRow][lastCol] = Piece.RED;
+				first = Piece.RED;
+			} else {
+				answer[lastRow][lastCol] = Piece.BLUE;
+				first = Piece.BLUE;
+			}
+
+			return [answer, first];
+		}
+
+		var breakUpLongWord = function(ctx, word) {
+			var subWords = [];
+			var times = Math.ceil(ctx.measureText(word).width / CARD_WIDTH);
+			var subWordLength = Math.ceil(word.length / times);
+			for (var i = 1; i <= times; i++) {
+				if (i != times) {
+					subWords.push(word.substring((i - 1) * subWordLength, i * subWordLength) + "-");
+				} else {
+					subWords.push(word.substring((i - 1) * subWordLength, word.length));
+				}
+			}
+			return subWords;
+		}
+
+		var breakUpPhrase = function(ctx, word) {
+			var subWords = [];
+			var words = word.split(" ");
+			if (ctx.measureText(word).width > CARD_WIDTH || words.length > 1) {
+				var subphrase = "";
+				for (var i = 0; i < words.length; i++) {
+					var subWord = words[i];
+					if (ctx.measureText(subWord).width > CARD_WIDTH) {
+						if (subphrase !== "") {
+							subWords.push(subphrase);
+							subphrase = "";
+						}
+						var broken = breakUpLongWord(ctx, subWord);
+						for (var brokenWord of broken) {
+							subWords.push(brokenWord);
+						}
+					} else {
+						if (ctx.measureText(subphrase + subWord + " ").width > CARD_WIDTH) {
+							subWords.push(subphrase);
+							subphrase = "";
+							i--;
+						} else {
+							subphrase += subWord + " ";
+						}
+					}
+				}
+				if (subphrase !== "") {
+					subWords.push(subphrase);
+				}
+			} else {
+				subWords.push(word);
+			}
+			return subWords;
+		}
+
+		var words = getWords();
+		var answer = getAnswer();
+		var board = Board(getWords(), answer[0], answer[1]);
+
+		var ctx = document.getElementById('ctx').getContext('2d');
+		ctx.font = FONT_SIZE + 'px Arial';
+		var socket = io();
+		setInterval(function() {
+			ctx.clearRect(0, 0, WIDTH, HEIGHT);
+			for (var r = 0; r < SIDE; r++) {
+				for (var c = 0; c < SIDE; c++) {
+					ctx.fillStyle = color(board.answer[r][c]);
+					ctx.fillRect(IN_BETWEEN + (CARD_WIDTH + IN_BETWEEN) * c, IN_BETWEEN + (CARD_HEIGHT + IN_BETWEEN) * r, CARD_WIDTH, CARD_HEIGHT);
+					ctx.fillStyle = '#000000';
+				}
+			}
+		}, 1000/25);
+	</script>
+</html>
