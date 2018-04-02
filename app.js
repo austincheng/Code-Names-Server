@@ -1,5 +1,6 @@
 var express = require('express');
 var fs = require('fs');
+var path = require('path');
 var app = express();
 var serv = require('http').Server(app);
 
@@ -61,7 +62,7 @@ var Board = function(words, answer, starter, gameId) {
 	return self;
 };
 
-var allWords = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+var allWords// = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
 var readTextFile = function(file) {
     fs.readFile(file, 'utf8', function(err, data) {
     	if (err) {
@@ -71,9 +72,9 @@ var readTextFile = function(file) {
     	allWords = content.split('\r\n');
     });
 }
-//readTextFile(__dirname + '/client/wordSets/lineSeparated/standardWords.txt');
+readTextFile(path.join(process.cwd(), '/client/wordSets/lineSeparated/standardWords.txt'));
 /* Extremely Ghetto. */
-//setTimeout(function() {}, 2000)
+setTimeout(function() {}, 2000)
 
 var getRandomInt = function(max) {
 	return Math.floor(Math.random() * max);
