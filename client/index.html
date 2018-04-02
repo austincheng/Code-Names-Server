@@ -12,6 +12,7 @@
 		var CARD_HEIGHT = 100;
 		var IN_BETWEEN = 50;
 		var FONT_SIZE = 20;
+		var FONT_STYLE = 'Arial';
 		var BUTTON_WIDTH = 50;
 		var BUTTON_HEIGHT = 25;
 		var TIMING_PADDING = 50;
@@ -208,17 +209,36 @@
 		var board = Board(getWords(), answer[0], answer[1]);
 
 		var ctx = document.getElementById('ctx').getContext('2d');
-		ctx.font = FONT_SIZE + 'px Arial';
+		ctx.font = FONT_SIZE + 'px ' + FONT_STYLE;
+
+		var getFontHeight = function() {
+			return ctx.measureText('M').width;
+		}
 		var socket = io();
-		setInterval(function() {
+		//setInterval(function() {
 			ctx.clearRect(0, 0, WIDTH, HEIGHT);
 			for (var r = 0; r < SIDE; r++) {
 				for (var c = 0; c < SIDE; c++) {
 					ctx.fillStyle = color(board.answer[r][c]);
 					ctx.fillRect(IN_BETWEEN + (CARD_WIDTH + IN_BETWEEN) * c, IN_BETWEEN + (CARD_HEIGHT + IN_BETWEEN) * r, CARD_WIDTH, CARD_HEIGHT);
-					ctx.fillStyle = '#000000';
+					ctx.fillStyle = 'black';
+					var word = board.words[r][c];
+					var subWords = breakUpPhrase(ctx, word);
+					var times = subWords.length;
+					while (getFontHeight() * times > CARD_HEIGHT) {
+						var oldFontSize = parseInt(ctx.font.substring(0, ctx.font.indexOf('px ')));
+						ctx.font = (oldFontSize - 1) + ctx.font.substring(ctx.font.indexOf('px '), ctx.font.length);
+						subWords = breakUpPhrase(ctx, word);
+						times = subWords.length;	
+					}
+					var count = 0;
+					for (var i = -(times / 2) + 1; i <= times / 2; i++) {
+						var y = IN_BETWEEN + (CARD_HEIGHT + IN_BETWEEN) * r + CARD_HEIGHT / 2 + i * getFontHeight();
+						ctx.fillText(subWords[count], IN_BETWEEN + (CARD_WIDTH + IN_BETWEEN) * c + CARD_WIDTH / 2 - ctx.measureText(subWords[count]).width / 2, y);
+						count++;
+					}
 				}
 			}
-		}, 1000/25);
+		//}, 1000/25);
 	</script>
 </html>
