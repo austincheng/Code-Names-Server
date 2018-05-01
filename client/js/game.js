@@ -185,3 +185,7 @@ socket.on('badMenuResponse', function() {
 socket.on('badSpyMasterMenuResponse', function() {
 	alert('There are already 2 spymasters.');
 });
+
+socket.on('badWords', function() {
+	alert('Not Enough Words.');
+})

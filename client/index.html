@@ -4,7 +4,14 @@
 		<title>Code Names</title>
 	</head>
 	<div id="menuDiv">
+		Comma Separated:
+		<input type="file" id="commaFiles" name="files[]" multiple />
+		<output id="commaList"></output></br>
+		Line Separated:
+		<input type="file" id="lineFiles" name="files[]" multiple />
+		<output id="lineList"></output>
 		<button id="hostGame">Host Game</button></br>
+		Game ID: 
 		<input id="gameId" type="text"></input>
 		<button id="joinPlayer">Join Game as Player</button>
 		<button id="joinSpyMaster">Join Game as Spy Master</button>
